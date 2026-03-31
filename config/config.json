@@ -1,21 +1,26 @@
 {
     "model": {
-        "path": "../models/yolov5s.engine",
-        "classes": "../models/classes/yolov5s.txt",
+        "path": "../models/marsupial16s_trt7_fp16.engine",
+        "classes": "../models/classes/marsupial16s.txt",
         "confidence": 0.5
     },
-
     "rules": [
         {
-            "objects": ["dog"],
-            "action": "OPEN"
+            "objects": ["Red Fox", "Fallow Deer", "Pig"],
+            "action": "CLOSE"
         },
         {
-            "objects": ["cat"],
-            "action": "CLOSE"
+            "objects": [
+                "Swamp Wallaby",
+                "Eastern Grey Kangaroo",
+                "Common Wombat",
+                "Long-nosed Bandicoot",
+                "Red-necked Wallaby",
+                "Common Brushtail Possum"
+            ],
+            "action": "OPEN"
         }
     ],
-    
     "server": {
         "port": 8080
     }

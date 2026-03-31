@@ -87,7 +87,7 @@ class DoorControl:
             bool: True if the door is fully open, False otherwise.
         """
         with self.lock:
-            return io.get_val('OPEN') == 0 and io.get_val('CLOSE') == 1
+            return io.get_val('OPEN') == 0
 
     #Check if door is fully closed by checking Hall Effect sensors
     def is_door_fully_closed(self):
@@ -99,4 +99,4 @@ class DoorControl:
             bool: True if the door is fully closed, False otherwise.
         """
         with self.lock:
-            return io.get_val('OPEN') == 1 and io.get_val('CLOSE') == 0
+            return io.get_val('CLOSE') == 0

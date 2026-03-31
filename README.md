@@ -27,6 +27,28 @@ Features include:
 
 - Web server dashboard to view a live feed fetched from the camera as well as manually control state of the door.
 
+## TRT7 Compatibility (JetPack 4.5 - 4.6.x)
+
+The pre-built `.engine` files in `models/` were compiled for TensorRT 8 and will not work on Jetson Nano with JetPack 4.x (TRT7).
+
+### Converting Models for TRT7
+
+Run the provided conversion script after completing setup:
+
+```bash
+cd SmartGate/setup
+chmod +x convert_models.sh
+./convert_models.sh
+```
+
+Then update `config/config.json` to point to the converted engine:
+```json
+"path": "../models/marsupial16s_trt7_fp16.engine"
+```
+
+### Recommended JetPack Version
+For best compatibility: **JetPack 4.6.1** (L4T R32.7.1)
+
 ## Requirements
 
 Installing the requirements should be ran under the Jetson Nano with the Jetpack SDK. For more info on setting this up, please refer to NVIDIA's official guides for your respective Jetson Nano model: 

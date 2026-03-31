@@ -16,14 +16,15 @@ from json_config import JsonConfig
 
 import signal
 import sys
+import time 
 
 def gstreamer_pipeline(
     capture_width=1280,
     capture_height=720,
-    display_width=1280,
-    display_height=720,
-    framerate=5,
-    flip_method=0
+    display_width=640,
+    display_height=360,
+    framerate=30,
+    flip_method=2  
 ):
     return (
         f"nvarguscamerasrc ! "
@@ -89,12 +90,25 @@ def main():
     #Initialize object detection class list
     object_list = []
 
-    #Open the camera using GStreamer pipeline
+    print("[+] Opening camera...")
     cap = cv2.VideoCapture(gstreamer_pipeline(), cv2.CAP_GSTREAMER)
+
+    if not cap.isOpened():
+        print("[!] Camera failed to open. Retrying in 3 seconds...")
+        time.sleep(3)
+        cap = cv2.VideoCapture(gstreamer_pipeline(), cv2.CAP_GSTREAMER)
+
+    if not cap.isOpened():
+        print("[-] Camera could not be opened. Check connection and drivers.")
+        io.all_pins_off()
+        GPIO.cleanup()
+        sys.exit(1)
+
+    print("[+] Camera opened successfully.")
 
     #Our main loop
     while True:
-        #----------Check for commands from POST requests coming from HTTP server------------
+        #----------Check for commands from POST requests------------
         command = Fetch_Queued_Command()
         if command:
             if command == 'OPEN_DOOR':
@@ -102,11 +116,10 @@ def main():
             elif command == 'CLOSE_DOOR':
                 current_state = State.DOOR_CLOSE
 
-        #------------IDLE State ------------------------------------------------------------
+        #------------IDLE State ------------------------------------
         if current_state == State.IDLE:
             print("System is idle.")
 
-            #Ensure the motor stops when Hall Effect sensors are detected during IDLE state
             if door_controller.is_door_fully_closed() and door_controller.is_door_closing:
                 door_controller.stop_door()
                 print("Door fully closed, stopping motor.")
@@ -114,67 +127,56 @@ def main():
                 door_controller.stop_door()
                 print("Door fully open, stopping motor.")
 
-            #On any movement, set to DETECT state which will start capturing from the camera
             if io.get_val('PIR'):
                 current_state = State.DETECT
             else:
-                current_state = State.IDLE #Put back to IDLE state
+                current_state = State.IDLE
 
-        #------------DETECT State ----------------------------------------------------------
+        #------------DETECT State ----------------------------------
         elif current_state == State.DETECT:
             print("Detecting objects.")
             ret_val, img = cap.read()
-            if not ret_val:
-                break
+            if not ret_val or img is None:
+                print("[!] Failed to read frame, retrying...")
+                time.sleep(0.1)
+                current_state = State.IDLE
+                continue
 
-            #Resize the frame for YOLOv5
             img = imutils.resize(img, width=600)
-
-            #Perform inference
             detections, t = model.Inference(img)
-
-            #Update the latest_frame for streaming
             set_latest_frame(img.copy())
-
             object_list = [obj['class'] for obj in detections]
             current_state = State.DECISION
 
-        #------------DECISION State --------------------------------------------------------
+        #------------DECISION State --------------------------------
         elif current_state == State.DECISION:
             print("Decision making door.")
-            
-            #Decide on ruleset
             current_state = decider.decide(object_list)
 
-        #------------DOOR OPEN State -------------------------------------------------------
+        #------------DOOR OPEN State -------------------------------
         elif current_state == State.DOOR_OPEN:
             print("Opening door.")
-
             if not door_controller.is_door_fully_open():
                 door_controller.open_door()
             else:
                 print('Door stopped on opening')
                 door_controller.stop_door()
-            
             current_state = State.IDLE
 
-        #------------DOOR CLOSE State ------------------------------------------------------
+        #------------DOOR CLOSE State ------------------------------
         elif current_state == State.DOOR_CLOSE:
             print("Closing door.")
-
-            #Read Hall Effect sensor of Door Closed. Keep closing if the Hall effect sensor is 0
             if not door_controller.is_door_fully_closed():
                 door_controller.close_door()
             else:
                 print('Door stopped on closing')
                 door_controller.stop_door()
-                
             current_state = State.IDLE
 
-        #------------Default State --------------------
+        #------------Default State ---------------------------------
         elif current_state == State.DELAY:
             print("Delaying operation.")
-    
+
     #Sets all pins to LOW
     io.all_pins_off()
 

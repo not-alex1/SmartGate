@@ -10,6 +10,25 @@ if [ "$EUID" -ne 0 ]; then
   exit
 fi
 
+# Fix .local permissions
+sudo chown -R $USER:$USER /home/$USER/.local/
+
+# Install protobuf compiler
+sudo apt install -y protobuf-compiler libprotobuf-dev
+
+# Create TRT7/TRT8 symlink
+if [ ! -f /usr/lib/aarch64-linux-gnu/libnvinfer.so.8 ]; then
+    sudo ln -sf /usr/lib/aarch64-linux-gnu/libnvinfer.so.7 \
+                /usr/lib/aarch64-linux-gnu/libnvinfer.so.8
+    echo "Created TRT7->TRT8 symlink"
+fi
+
+# Set CUDA environment
+export PATH=/usr/local/cuda-10.2/bin${PATH:+:${PATH}}
+export LD_LIBRARY_PATH=/usr/local/cuda-10.2/lib64:$LD_LIBRARY_PATH
+echo 'export PATH=/usr/local/cuda-10.2/bin${PATH:+:${PATH}}' >> ~/.bashrc
+echo 'export LD_LIBRARY_PATH=/usr/local/cuda-10.2/lib64:$LD_LIBRARY_PATH' >> ~/.bashrc
+
 sudo apt-get update
 sudo apt-get install -y liblapack-dev libblas-dev gfortran libfreetype6-dev libopenblas-base libopenmpi-dev libjpeg-dev zlib1g-dev
 sudo apt-get install -y python3-pip
