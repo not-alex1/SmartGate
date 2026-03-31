@@ -10,8 +10,9 @@ if [ "$EUID" -ne 0 ]; then
   exit
 fi
 
-# Fix .local permissions
+# Fix permissions
 sudo chown -R $USER:$USER /home/$USER/.local/
+sudo chown -R $USER:$USER /home/$USER/.cache/
 
 # Install protobuf compiler
 sudo apt install -y protobuf-compiler libprotobuf-dev
