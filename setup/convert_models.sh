@@ -2,21 +2,26 @@
 # SmartGate Model Conversion Script for TRT7 (JetPack 4.5-4.6)
 # Run this on the Jetson Nano after cloning the repo
 
-set -e
-
 HOME_DIR="/home/$(whoami)"
 SMARTGATE_DIR="$HOME_DIR/SmartGate"
 YOLOV5_DIR="$HOME_DIR/yolov5"
 MARSUPIAL_DIR="$HOME_DIR/marsupial"
 
 echo "[1/5] Cloning yolov5 v6.2..."
-git clone --branch v6.2 https://github.com/ultralytics/yolov5.git $YOLOV5_DIR
+if [ ! -d "$YOLOV5_DIR" ]; then
+    git clone --branch v6.2 https://github.com/ultralytics/yolov5.git $YOLOV5_DIR
+else
+    echo "yolov5 already exists, skipping clone"
+fi
 
 echo "[2/5] Cloning marsupial weights..."
-git clone https://github.com/carlosclaiton/marsupial.git $MARSUPIAL_DIR
+if [ ! -d "$MARSUPIAL_DIR" ]; then
+    git clone https://github.com/carlosclaiton/marsupial.git $MARSUPIAL_DIR
+else
+    echo "marsupial already exists, skipping clone"
+fi
 
 echo "[3/5] Installing export dependencies..."
-pip3 install seaborn==0.11.2
 pip3 install onnx==1.9.0
 
 echo "[4/5] Exporting marsupial16s to ONNX..."
