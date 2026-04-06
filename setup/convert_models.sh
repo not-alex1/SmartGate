@@ -14,12 +14,10 @@ else
     echo "yolov5 already exists, skipping clone"
 fi
 
-echo "[2/5] Cloning marsupial weights..."
-if [ ! -d "$MARSUPIAL_DIR" ]; then
-    git clone https://github.com/Sydney-Informatics-Hub/marsupial.git $MARSUPIAL_DIR
-else
-    echo "marsupial already exists, skipping clone"
-fi
+echo "[2/5] Downloading marsupial_16s weights..."
+mkdir -p $MARSUPIAL_DIR/weights
+wget -O $MARSUPIAL_DIR/weights/marsupial_16s.pt \
+  "https://github.com/Sydney-Informatics-Hub/marsupial/raw/main/weights/marsupial_16s.pt"
 
 echo "[3/5] Installing export dependencies..."
 pip3 install onnx==1.9.0
