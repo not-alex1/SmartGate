@@ -34,7 +34,8 @@ def gstreamer_pipeline(
         f"nvvidconv flip-method={flip_method} ! "
         f"video/x-raw, width=(int){display_width}, height=(int){display_height}, format=(string)BGRx ! "
         f"videoconvert ! "
-        f"video/x-raw, format=(string)BGR ! appsink"
+        f"video/x-raw, format=(string)BGR ! "
+        f"appsink max-buffers=1 drop=true"
     )
 
 def cleanup():
@@ -141,9 +142,6 @@ def main():
         #------------DETECT State ----------------------------------
         elif current_state == State.DETECT:
             print("Detecting objects.")
-            # Flush stale frames
-            for _ in range(4):
-                cap.grab()
             ret_val, img = cap.read()
             if not ret_val or img is None:
                 print("[!] Failed to read frame, retrying...")
