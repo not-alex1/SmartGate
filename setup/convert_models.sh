@@ -16,7 +16,7 @@ fi
 
 echo "[2/5] Cloning marsupial weights..."
 if [ ! -d "$MARSUPIAL_DIR" ]; then
-    git clone https://github.com/carlosclaiton/marsupial.git $MARSUPIAL_DIR
+    git clone https://github.com/Sydney-Informatics-Hub/marsupial.git $MARSUPIAL_DIR
 else
     echo "marsupial already exists, skipping clone"
 fi
