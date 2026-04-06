@@ -135,6 +135,8 @@ def main():
         #------------DETECT State ----------------------------------
         elif current_state == State.DETECT:
             print("Detecting objects.")
+            for _ in range(4):
+                cap.grab()
             ret_val, img = cap.read()
             if not ret_val or img is None:
                 print("[!] Failed to read frame, retrying...")
@@ -146,6 +148,7 @@ def main():
             detections, t = model.Inference(img)
             set_latest_frame(img.copy())
             object_list = [obj['class'] for obj in detections]
+            print(f"[DETECT] Found: {[(obj['class'], round(obj['conf'], 2)) for obj in detections]}")
             current_state = State.DECISION
 
         #------------DECISION State --------------------------------
