@@ -16,10 +16,16 @@ fi
 
 echo "[2/5] Downloading marsupial_16s weights..."
 mkdir -p $MARSUPIAL_DIR/weights
-wget -O $MARSUPIAL_DIR/weights/marsupial_16s.pt \
-  "https://github.com/Sydney-Informatics-Hub/marsupial/raw/main/weights/marsupial_16s.pt"
+if [ ! -f "$MARSUPIAL_DIR/weights/marsupial_16s.pt" ]; then
+    wget -O $MARSUPIAL_DIR/weights/marsupial_16s.pt \
+      "https://github.com/Sydney-Informatics-Hub/marsupial/raw/main/weights/marsupial_16s.pt"
+else
+    echo "marsupial_16s.pt already exists, skipping download"
+fi
 
 echo "[3/5] Installing export dependencies..."
+sudo apt install -y python3-matplotlib
+pip3 install --no-deps seaborn==0.11.2
 pip3 install onnx==1.9.0
 
 echo "[4/5] Exporting marsupial16s to ONNX..."
