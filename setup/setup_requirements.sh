@@ -46,7 +46,8 @@ export LD_LIBRARY_PATH=/usr/local/cuda-10.2/lib64:$LD_LIBRARY_PATH
 python3 -m pip install pycuda --user
 
 #Seaborn installation for data-visualization
-pip3 install seaborn==0.11.2
+sudo apt install -y python3-matplotlib
+pip3 install --no-deps seaborn==0.11.2
 
 #Install torch and torchvision
 wget https://nvidia.box.com/shared/static/fjtbno0vpo676a25cgvuqc1wty0fkkg6.whl -O torch-1.10.0-cp36-cp36m-linux_aarch64.whl
