@@ -39,6 +39,12 @@ def gstreamer_pipeline(
 
 def cleanup():
     print("[+] Cleaning up resources...")
+    global cap
+    try:
+        if cap.isOpened():
+            cap.release()
+    except:
+        pass
     io.all_pins_off()
     GPIO.cleanup()
     Shutdown_Server(web_server)
@@ -135,6 +141,7 @@ def main():
         #------------DETECT State ----------------------------------
         elif current_state == State.DETECT:
             print("Detecting objects.")
+            # Flush stale frames
             for _ in range(4):
                 cap.grab()
             ret_val, img = cap.read()
@@ -143,12 +150,11 @@ def main():
                 time.sleep(0.1)
                 current_state = State.IDLE
                 continue
-
             img = imutils.resize(img, width=600)
             detections, t = model.Inference(img)
             set_latest_frame(img.copy())
             object_list = [obj['class'] for obj in detections]
-            print(f"[DETECT] Found: {[(obj['class'], round(obj['conf'], 2)) for obj in detections]}")
+            print(f"[DETECT] Found: {object_list}")
             current_state = State.DECISION
 
         #------------DECISION State --------------------------------
