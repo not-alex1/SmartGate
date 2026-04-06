@@ -24,6 +24,9 @@ fi
 echo "[3/5] Installing export dependencies..."
 pip3 install onnx==1.9.0
 
+echo "[3.5/5] Overriding apt seaborn with compatible version..."
+pip3 install --ignore-installed seaborn==0.11.2
+
 echo "[4/5] Exporting marsupial16s to ONNX..."
 cd $YOLOV5_DIR
 python3 export.py \
