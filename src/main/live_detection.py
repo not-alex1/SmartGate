@@ -16,6 +16,7 @@ from json_config import JsonConfig
 
 import signal
 import sys
+import time
 
 def gstreamer_pipeline(
     capture_width=1280,
@@ -127,7 +128,8 @@ def main():
             if io.get_val('PIR'):
                 current_state = State.DETECT
             else:
-                current_state = State.IDLE #Put back to IDLE state
+                current_state = State.IDLE
+                time.sleep(0.1) #Put back to IDLE state
 
         #------------DETECT State ----------------------------------------------------------
         elif current_state == State.DETECT:
