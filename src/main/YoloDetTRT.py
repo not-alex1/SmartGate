@@ -115,7 +115,7 @@ class YoloTRT():
         output = host_outputs[0]
                 
         for i in range(self.batch_size):
-            result_boxes, result_scores, result_classid = self.PostProcess(output[i * self.LEN_ALL_RESULT: (i + 1) * self.LEN_ALL_RESULT], origin_h, origin_w)
+            result_boxes, result_scores, result_classid = self.PostProcess(output, origin_h, origin_w)
             
         det_res = []
         for j in range(len(result_boxes)):
@@ -129,14 +129,39 @@ class YoloTRT():
         return det_res, t2-t1
 
     def PostProcess(self, output, origin_h, origin_w):
-        num = int(output[0])
-        if self.yolo_version == "v5":
-            pred = np.reshape(output[1:], (-1, self.LEN_ONE_RESULT))[:num, :]
-            pred = pred[:, :6]
-        elif self.yolo_version == "v7":
-            pred = np.reshape(output[1:], (-1, 6))[:num, :]
-        
-        boxes = self.NonMaxSuppression(pred, origin_h, origin_w, conf_thres=self.CONF_THRESH, nms_thres=self.IOU_THRESHOLD)
+        # Raw TRT7 output: flat array of 25200 * (5 + num_classes)
+        # Each detection: [x, y, w, h, objectness, class0_score, class1_score, ...]
+        num_classes = len(self.categories)
+        pred = np.reshape(output, (-1, self.LEN_ONE_RESULT))
+
+        # Filter by objectness * class confidence
+        # Get objectness scores
+        obj_conf = pred[:, 4]
+
+        # Multiply objectness by class scores
+        class_scores = pred[:, 5:] * obj_conf[:, np.newaxis]
+
+        # Get best class and score for each detection
+        class_ids = np.argmax(class_scores, axis=1)
+        scores = np.max(class_scores, axis=1)
+
+        # Filter by confidence threshold
+        mask = scores >= self.CONF_THRESH
+        filtered = pred[mask]
+        filtered_scores = scores[mask]
+        filtered_class_ids = class_ids[mask]
+
+        if len(filtered) == 0:
+            return np.array([]), np.array([]), np.array([])
+
+        # Build prediction array: [x, y, w, h, score, class_id]
+        result = np.zeros((len(filtered), 6))
+        result[:, :4] = filtered[:, :4]  # x, y, w, h
+        result[:, 4] = filtered_scores
+        result[:, 5] = filtered_class_ids
+
+        # Run NMS
+        boxes = self.NonMaxSuppression(result, origin_h, origin_w, conf_thres=self.CONF_THRESH, nms_thres=self.IOU_THRESHOLD)
         result_boxes = boxes[:, :4] if len(boxes) else np.array([])
         result_scores = boxes[:, 4] if len(boxes) else np.array([])
         result_classid = boxes[:, 5] if len(boxes) else np.array([])
