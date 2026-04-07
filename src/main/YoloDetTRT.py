@@ -24,7 +24,7 @@ class YoloTRT():
     :param library: Path to the TensorRT library
     :param yolor_ver: Version of YOLO being used
     """
-    def __init__(self, config : dict, library : str="../../lib/libmyplugins.so", yolo_ver : str="v5"):
+    def __init__(self, config : dict, library : str=None, yolo_ver : str="v5"):
         #Set config attributes appropriately
         engine       = config['path']
         classes_file = config['classes']
@@ -32,8 +32,6 @@ class YoloTRT():
 
         self.CONF_THRESH = conf 
         self.IOU_THRESHOLD = 0.4
-        self.LEN_ALL_RESULT = 38001
-        self.LEN_ONE_RESULT = 38
         self.yolo_version = yolo_ver
 
         #Categories will be obtained from human-readable label text files
@@ -44,10 +42,14 @@ class YoloTRT():
                 classes.append(class_name.strip())
 
         self.categories = classes
+
+        self.LEN_ONE_RESULT = 5 + len(self.categories)
+        self.LEN_ALL_RESULT = 25200 * self.LEN_ONE_RESULT
         
         TRT_LOGGER = trt.Logger(trt.Logger.INFO)
 
-        ctypes.CDLL(library)
+        if library:
+            ctypes.CDLL(library)
 
         with open(engine, 'rb') as f:
             serialized_engine = f.read()
