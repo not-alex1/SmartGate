@@ -56,6 +56,7 @@ class YoloTRT():
 
         runtime = trt.Runtime(TRT_LOGGER)
         self.engine = runtime.deserialize_cuda_engine(serialized_engine)
+        self.context = self.engine.create_execution_context()
         self.batch_size = self.engine.max_batch_size
 
         for binding in self.engine:
@@ -105,7 +106,6 @@ class YoloTRT():
         input_image, image_raw, origin_h, origin_w = self.PreProcessImg(img)
         np.copyto(host_inputs[0], input_image.ravel())
         stream = cuda.Stream()
-        self.context = self.engine.create_execution_context()
         cuda.memcpy_htod_async(cuda_inputs[0], host_inputs[0], stream)
         t1 = time.time()
         self.context.execute_async(self.batch_size, bindings, stream_handle=stream.handle)
